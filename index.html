@@ -6,28 +6,33 @@
 <title>ChronoYear</title>
 
 <style>
-body{margin:0;font-family:Arial;background:#0b0b0b;color:white;text-align:center;padding:20px;}
-h1{color:gold;}
-input,select,button{padding:12px;margin:8px;border-radius:10px;border:none;width:90%;}
-button{background:gold;font-weight:bold;}
-.card{background:#111;padding:15px;border-radius:15px;margin-top:15px;}
+body{margin:0;font-family:Arial;background:#0a0a0a;color:white;text-align:center;}
+h1{color:#d4af37;margin-top:30px;letter-spacing:2px;}
+.container{max-width:400px;margin:auto;padding:20px;}
+.card{background:#111;border-radius:20px;padding:20px;margin-top:20px;box-shadow:0 0 20px rgba(212,175,55,0.1);}
+input,select,button{width:100%;padding:14px;margin-top:10px;border-radius:12px;border:none;}
+input,select{background:#1a1a1a;color:white;}
+button{background:#d4af37;color:black;font-weight:bold;}
+.result{margin-top:20px;font-size:22px;color:#d4af37;}
 .hidden{display:none;}
-.result{margin-top:15px;font-size:22px;color:gold;}
 </style>
 </head>
 
 <body>
 
-<h1>ChronoYear</h1>
+<h1>CHRONOYEAR</h1>
+
+<div class="container">
 
 <div id="login" class="card">
-<input id="code" placeholder="Enter your access code">
+<input id="code" placeholder="Access code">
 <button onclick="login()">Unlock</button>
 </div>
 
 <div id="app" class="hidden">
 
 <div class="card">
+
 <select id="brand" onchange="toggleSeiko()">
 <option value="rolex">Rolex</option>
 <option value="omega">Omega</option>
@@ -41,23 +46,29 @@ button{background:gold;font-weight:bold;}
 
 <div id="seikoFields" class="hidden">
 <input id="seikoSerial" placeholder="Seiko serial">
-<input id="seikoMovement" placeholder="Movement (6309)">
+<input id="seikoMovement" placeholder="Movement (ex: 6309)">
 </div>
 
 <button onclick="lookup()">Search</button>
-
 <div id="result" class="result"></div>
+
+</div>
 </div>
 
 </div>
 
 <script>
 
-const validCodes = ["CHRONO-001","CHRONO-002","CHRONO-003","CHRONO-004","CHRONO-005",
-"CHRONO-006","CHRONO-007","CHRONO-008","CHRONO-009","CHRONO-010",
-"CHRONO-011","CHRONO-012","CHRONO-013","CHRONO-014","CHRONO-015",
-"CHRONO-016","CHRONO-017","CHRONO-018","CHRONO-019","CHRONO-020"];
+// ===== CODES CLIENT =====
+const validCodes = [
+"CHRONO-001","CHRONO-002","CHRONO-003","CHRONO-004","CHRONO-005",
+"CHRONO-006","CHRONO-007","CHRONO-008","CHRONO-009","CHRONO-010"
+];
 
+// ===== CODE ADMIN =====
+const adminCode = "ADMIN-ACCESS";
+
+// ===== DEVICE LOCK =====
 let deviceId = localStorage.getItem("deviceId");
 if(!deviceId){
 deviceId = Math.random().toString(36).substring(2);
@@ -66,6 +77,13 @@ localStorage.setItem("deviceId", deviceId);
 
 function login(){
 let code = document.getElementById("code").value.toUpperCase().trim();
+
+// ADMIN (illimité)
+if(code === adminCode){
+unlock();
+return;
+}
+
 let saved = localStorage.getItem("license_"+code);
 
 if(!validCodes.includes(code)){
@@ -81,7 +99,7 @@ else if(saved===deviceId){
 unlock();
 }
 else{
-alert("Code already used on another device");
+alert("Code already used");
 }
 }
 
@@ -90,64 +108,125 @@ document.getElementById("login").classList.add("hidden");
 document.getElementById("app").classList.remove("hidden");
 }
 
+// ===== UI =====
 function toggleSeiko(){
 let b=document.getElementById("brand").value;
 document.getElementById("seikoFields").classList.toggle("hidden",b!=="seiko");
 document.getElementById("defaultField").classList.toggle("hidden",b==="seiko");
 }
 
-const rolexLetters={V:"2008-2009"};
-const rolexNumeric=[{year:"1927-1930",min:0,max:20000}];
+// ===== ROLEX =====
+const rolexLetters = {
+R:"1987-1988",L:"1989",E:"1990",X:"1991",N:"1991",
+C:"1992",S:"1993",W:"1994",T:"1996",U:"1997",
+A:"1998",P:"2000",K:"2001",Y:"2002",F:"2003",
+D:"2005",Z:"2006",M:"2007",V:"2008-2009",G:"2010"
+};
 
-const omega=[{year:"2000s",min:60000000,max:79999999}];
+const rolexRanges = [
+{min:0,max:20000,year:"1927-1930"},
+{min:20001,max:50000,year:"1931-1940"},
+{min:50001,max:90000,year:"1941-1950"},
+{min:90001,max:150000,year:"1951-1953"},
+{min:150001,max:300000,year:"1954-1959"},
+{min:300001,max:700000,year:"1960-1965"},
+{min:700001,max:1200000,year:"1966-1969"},
+{min:1200001,max:1800000,year:"1970-1972"},
+{min:1800001,max:2500000,year:"1973-1975"},
+{min:2500001,max:3500000,year:"1976-1978"},
+{min:3500001,max:4500000,year:"1979-1981"},
+{min:4500001,max:6000000,year:"1982-1985"},
+{min:6000001,max:8000000,year:"1986-1987"}
+];
 
-const cartier=[{year:"1990s",min:20000,max:100000}];
+// ===== OMEGA =====
+const omegaRanges = [
+{min:10000000,max:19999999,year:"1950s"},
+{min:20000000,max:29999999,year:"1960s"},
+{min:30000000,max:39999999,year:"1970s"},
+{min:40000000,max:59999999,year:"1980s"},
+{min:60000000,max:79999999,year:"1990s-2000s"}
+];
 
-const seikoMovements=[{caliber:"6309",start:1976,end:1988}];
+// ===== CARTIER =====
+const cartierRanges = [
+{min:10000,max:20000,year:"1980s"},
+{min:20001,max:50000,year:"1990s"},
+{min:50001,max:90000,year:"2000-2009"}
+];
 
-function decodeSeiko(s,m){
-let d=parseInt(s[0]);
-let mv=seikoMovements.find(x=>m.startsWith(x.caliber));
-if(!mv)return "Unknown movement";
-for(let y=mv.start;y<=mv.end;y++){
-if(y%10===d)return y;
+// ===== SEIKO PRO =====
+const seikoMovements = [
+{caliber:"6309",start:1976,end:1988},
+{caliber:"7S26",start:1996,end:2010},
+{caliber:"7009",start:1980,end:1996}
+];
+
+function decodeSeiko(serial, movement){
+let digit = parseInt(serial[0]);
+let move = seikoMovements.find(m => movement.startsWith(m.caliber));
+if(!move) return "Unknown movement";
+
+let years=[];
+for(let y=move.start; y<=move.end; y++){
+if(y % 10 === digit){
+years.push(y);
 }
 }
 
+if(years.length>0){
+return years[Math.floor(years.length/2)] + " (est.)";
+}
+
+return "Approx " + move.start + "-" + move.end;
+}
+
+// ===== SEARCH =====
 function lookup(){
-let b=document.getElementById("brand").value;
-let r=document.getElementById("result");
+let brand = document.getElementById("brand").value;
+let r = document.getElementById("result");
 
-if(b==="seiko"){
-r.innerHTML=decodeSeiko(
-document.getElementById("seikoSerial").value,
-document.getElementById("seikoMovement").value
-);
+if(brand==="seiko"){
+let s=document.getElementById("seikoSerial").value;
+let m=document.getElementById("seikoMovement").value;
+r.innerHTML = decodeSeiko(s,m);
 return;
 }
 
-let input=document.getElementById("serial").value.toUpperCase();
+let input=document.getElementById("serial").value.toUpperCase().trim();
 
-if(b==="rolex"){
-let f=input[0];
-if(rolexLetters[f]) return r.innerHTML=rolexLetters[f];
+if(brand==="rolex"){
+let first=input[0];
+if(rolexLetters[first]){
+r.innerHTML=rolexLetters[first];
+return;
+}
 let n=parseInt(input);
-for(let i of rolexNumeric){
-if(n>=i.min&&n<=i.max) return r.innerHTML=i.year;
+for(let i of rolexRanges){
+if(n>=i.min && n<=i.max){
+r.innerHTML=i.year;
+return;
+}
 }
 }
 
-if(b==="omega"){
+if(brand==="omega"){
 let n=parseInt(input);
-for(let i of omega){
-if(n>=i.min&&n<=i.max) return r.innerHTML=i.year;
+for(let i of omegaRanges){
+if(n>=i.min && n<=i.max){
+r.innerHTML=i.year;
+return;
+}
 }
 }
 
-if(b==="cartier"){
+if(brand==="cartier"){
 let n=parseInt(input);
-for(let i of cartier){
-if(n>=i.min&&n<=i.max) return r.innerHTML=i.year;
+for(let i of cartierRanges){
+if(n>=i.min && n<=i.max){
+r.innerHTML=i.year;
+return;
+}
 }
 }
 
